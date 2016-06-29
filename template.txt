@@ -1,0 +1,88 @@
+{% macro render_example(title, examples) -%}
+{% if examples %}{{title}}{% endif %}
+
+{% for ex in examples %}
+{{ex.title}}
+
+{noformat}
+{% autoescape false -%}
+{{ex.content}}
+{% endautoescape -%}
+{noformat}
+
+{% endfor %}
+{%- endmacro -%}
+
+
+
+
+{% macro render_endpoint_params(params) -%}
+
+{% for param_group in params.fields %}
+h4. {{loop.key}}
+
+|| Field || Type || Description ||
+{% for param in param_group -%}
+| {{param.field}} {% if param.optional %}*optional*{% endif %} | {{param.type}} | {{param.description|striptags}}
+{% if param.allowedValues %}Allowed values: {% endif %}{% for value in param.allowedValues %}{{value}},{% endfor %}|
+{% endfor %}
+
+{% endfor %}
+
+{{ render_example("*Param examples*", params.examples) }}
+
+{%- endmacro -%}
+
+
+
+
+{% macro render_endpoint(endpoint) %}
+h3. {{ endpoint.title }}
+bq. {{ endpoint.type|upper }} {{ endpoint.url }}
+
+{{ endpoint.description|striptags }}
+
+*Permissions*
+{% for perm in endpoint.permission -%}
+- {{perm.title}}: {{perm.description|striptags}}
+{% endfor %}
+
+{{ render_endpoint_params(endpoint.parameter) }}
+
+{{ render_example("*Success Examples*", endpoint.success.examples) }}
+
+{% for error_group in endpoint.error.fields %}
+*{{loop.key}}*
+
+|| Name || Description ||
+{% for error in error_group -%}
+| {{error.field}} {% if error.optional %}*optional*{% endif %} | {{error.description|striptags}} |
+{% endfor %}
+
+{% endfor %}
+
+{{ render_example("*Error Examples*", endpoint.error.examples) }}
+
+{%- endmacro -%}
+
+
+
+
+h1. {{ project.name }}
+
+{{ project.description }}
+
+*URL:* {{project.url}}
+
+*TOC*
+{toc:maxLevel=3}
+
+{% for group in groups %}
+h2. {{group.title}}
+
+{{ group.description|striptags }}
+{% for endpoint in endpointsByGroup[group.id] %}
+{{ render_endpoint(endpoint) }}
+{%- endfor %}
+{%- endfor %}
+
